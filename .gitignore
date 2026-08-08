@@ -1,0 +1,39 @@
+# 자격증명 — 절대 커밋 금지 (실행계획서 §10)
+.env
+.tokens.env
+dev/.env
+dev/.tokens.env
+*.token
+.admin_token
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+.venv/
+venv/
+
+# 도구 캐시
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+coverage.xml
+
+# 스파이크 산출물 — 실 사용자 id 와 서명된 trigger_id 가 들어 있어 커밋하지 않는다.
+# 관찰된 페이로드 '형태'는 tests/fixtures.py 에 익명화해 옮겨 둔다.
+spikes/payloads/
+/tmp/
+
+# 에디터
+.idea/
+.vscode/
+*.swp
+.DS_Store
+
+# 서버 접속 정보 (git 추적 금지)
+우분투서버_SSH*.txt

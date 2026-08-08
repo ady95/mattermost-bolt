@@ -1,0 +1,51 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # 3.9 는 하한선이므로 반드시 실행한다. mypy 는 3.9 를 검사하지 못하므로
+        # 이 매트릭스가 하위 호환의 유일한 실증 수단이다.
+        python-version: ["3.9", "3.11", "3.13"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+
+      - name: Set up Python ${{ matrix.python-version }}
+        run: uv python install ${{ matrix.python-version }}
+
+      - name: Install
+        run: uv pip install --system -e ".[dev]"
+
+      - name: Test
+        run: pytest -q
+
+  quality:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+
+      - name: Install
+        run: uv pip install --system -e ".[dev]"
+
+      - name: Lint
+        run: ruff check .
+
+      - name: Format
+        run: ruff format --check .
+
+      - name: Types
+        run: mypy
