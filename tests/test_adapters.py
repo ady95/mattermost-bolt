@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import sys
+import threading
 from typing import Any
 
 import httpx
@@ -12,7 +13,7 @@ import pytest
 import fixtures
 from conftest import FakeClient
 from mattermost_bolt import App
-from mattermost_bolt.adapter.http_receiver import HTTPReceiver, _parse_body, wsgi_app
+from mattermost_bolt.adapter.http_receiver import HTTPReceiver, parse_body, wsgi_app
 from mattermost_bolt.adapter.socket_mode import SocketModeHandler
 from mattermost_bolt.adapter.ws_client import to_websocket_url
 from mattermost_bolt.ts import TsCodec, looks_like_post_id
@@ -25,7 +26,9 @@ from mattermost_bolt.ts import TsCodec, looks_like_post_id
     [
         ("http://mm.test", "ws://mm.test/api/v4/websocket"),
         ("https://mm.test", "wss://mm.test/api/v4/websocket"),
-        ("https://mattermost.example.com/", "ws://mattermost.example.com/api/v4/websocket"),
+        # 포트와 후행 슬래시가 함께 있는 형태
+        ("http://mm.test:8072/", "ws://mm.test:8072/api/v4/websocket"),
+        ("https://mm.test:8443/", "wss://mm.test:8443/api/v4/websocket"),
         ("mm.test", "ws://mm.test/api/v4/websocket"),
         ("wss://mm.test", "wss://mm.test/api/v4/websocket"),
     ],
@@ -80,7 +83,7 @@ def test_post_id_detection() -> None:
 
 
 def test_command_body_is_form_encoded() -> None:
-    parsed = _parse_body(
+    parsed = parse_body(
         "application/x-www-form-urlencoded",
         b"command=%2Fping&text=hello+world&channel_id=c1",
     )
@@ -88,13 +91,13 @@ def test_command_body_is_form_encoded() -> None:
 
 
 def test_interaction_body_is_json() -> None:
-    parsed = _parse_body("application/json", b'{"context":{"action_id":"a"}}')
+    parsed = parse_body("application/json", b'{"context":{"action_id":"a"}}')
     assert parsed["context"]["action_id"] == "a"
 
 
 def test_malformed_json_does_not_explode() -> None:
-    assert _parse_body("application/json", b"{broken") == {}
-    assert _parse_body("application/json", b"") == {}
+    assert parse_body("application/json", b"{broken") == {}
+    assert parse_body("application/json", b"") == {}
 
 
 # -- HTTP 리시버 (실제 소켓) -----------------------------------------------
@@ -180,6 +183,65 @@ def test_wsgi_app_routes_commands(http_app: App) -> None:
     body = b"".join(application(environ, start_response))
     assert captured == ["200 OK"]
     assert json.loads(body)["text"] == "pong"
+
+
+# -- 외부 프레임워크에 얹기 (FastAPI 등) -----------------------------------
+
+
+class _DummyWS:
+    """네트워크에 나가지 않는 WebSocket 클라이언트 대역."""
+
+    def __init__(self, **_kwargs: Any) -> None:
+        self.connected = threading.Event()
+
+    def run_forever(self) -> None:
+        self.connected.set()
+
+    def close(self) -> None:
+        self.connected.clear()
+
+
+def _patch_ws(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr("mattermost_bolt.adapter.ws_client.MattermostWebSocketClient", _DummyWS)
+
+
+def _http_app(fake_client: FakeClient) -> App:
+    return App(
+        token="t" * 26,
+        server_url="http://mm.test",
+        client=fake_client,  # type: ignore[arg-type]
+        mode="http",
+        request_url="http://app.test",
+    )
+
+
+def test_start_can_skip_the_builtin_http_receiver(
+    fake_client: FakeClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """FastAPI 등 외부 서버에 얹을 때 내장 리시버가 포트를 잡으면 안 된다."""
+    _patch_ws(monkeypatch)
+    app = _http_app(fake_client)
+    app.start(blocking=False, http_receiver=False)
+    try:
+        assert app._http_server is None
+        # WebSocket 리스너는 그대로 돈다 — 이벤트 수신은 계속 필요하다.
+        assert app._ws is not None
+        # 콜백 URL 생성도 영향받지 않는다.
+        assert app.command_url == "http://app.test/mmbolt/commands"
+    finally:
+        app.stop()
+
+
+def test_start_launches_the_builtin_receiver_by_default(
+    fake_client: FakeClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _patch_ws(monkeypatch)
+    app = _http_app(fake_client)
+    app.start(port=0, host="127.0.0.1", blocking=False)
+    try:
+        assert app._http_server is not None
+    finally:
+        app.stop()
 
 
 # -- SocketModeHandler -----------------------------------------------------

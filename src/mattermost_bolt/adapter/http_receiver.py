@@ -25,8 +25,12 @@ _logger = logging.getLogger("mattermost_bolt.http")
 JSON_CONTENT = "application/json"
 
 
-def _parse_body(content_type: str, raw: bytes) -> dict[str, Any]:
-    """Mattermost 는 command 를 폼으로, 인터랙션을 JSON 으로 보낸다."""
+def parse_body(content_type: str, raw: bytes) -> dict[str, Any]:
+    """Mattermost 는 command 를 폼으로, 인터랙션을 JSON 으로 보낸다.
+
+    FastAPI 등 외부 프레임워크에 얹을 때도 그대로 쓸 수 있도록 공개한다.
+    ``route()`` 와 짝을 이룬다.
+    """
     text = raw.decode("utf-8") if raw else ""
     if JSON_CONTENT in (content_type or ""):
         try:
@@ -57,7 +61,7 @@ class _Handler(BaseHTTPRequestHandler):
     def do_POST(self) -> None:
         length = int(self.headers.get("Content-Length") or 0)
         raw = self.rfile.read(length) if length else b""
-        body = _parse_body(self.headers.get("Content-Type", ""), raw)
+        body = parse_body(self.headers.get("Content-Type", ""), raw)
         path = self.path.split("?", 1)[0]
 
         try:
@@ -151,7 +155,7 @@ def wsgi_app(app: Any) -> Callable[[dict[str, Any], Callable[..., Any]], Iterabl
         except ValueError:
             length = 0
         raw = environ["wsgi.input"].read(length) if length else b""
-        body = _parse_body(environ.get("CONTENT_TYPE", ""), raw)
+        body = parse_body(environ.get("CONTENT_TYPE", ""), raw)
 
         response = route(app, path, body)
         if response is None:

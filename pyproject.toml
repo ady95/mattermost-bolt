@@ -20,6 +20,12 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+# 기존 FastAPI 서비스에 얹을 때 (examples/03_interactive_server.py 참고).
+# 라이브러리 자체는 표준 라이브러리 HTTP 서버로 동작하므로 선택 사항이다.
+fastapi = [
+    "fastapi>=0.110",
+    "uvicorn>=0.30",
+]
 dev = [
     "pytest>=8.0",
     "pytest-cov>=5.0",

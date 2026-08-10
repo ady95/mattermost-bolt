@@ -92,7 +92,7 @@ app = App(
     token=os.environ["MM_BOT_TOKEN"],
     server_url=os.environ["MM_SERVER_URL"],
     mode="http",
-    request_url="http://10.0.0.5:8099",   # Mattermost 가 도달할 수 있는 주소
+    request_url="http://10.0.0.5:8099",  # Mattermost 가 도달할 수 있는 주소
 )
 ...
 app.start(port=8099)
@@ -112,6 +112,24 @@ app.start(port=8099)
    (System Console → Environment → Developer → *Allow untrusted internal connections to*)
 
 자세한 진단은 [MIGRATION.md](MIGRATION.md) 를 참고하세요.
+
+### 4. 기존 웹 프레임워크에 얹기 (선택)
+
+내장 HTTP 서버 대신 이미 운영 중인 FastAPI/Flask 앱이 인터랙션을 받게 할 수 있습니다.
+포트를 하나만 열거나, 기존 인증 미들웨어·리버스 프록시를 그대로 쓰고 싶을 때 유용합니다.
+
+```python
+app.start(blocking=False, http_receiver=False)   # WebSocket 만 기동
+
+
+@api.post("/mmbolt/commands")  # FastAPI 라우트
+async def commands(request: Request):
+    body = parse_body(request.headers.get("content-type", ""), await request.body())
+    return _to_response(await run_in_threadpool(app.handle_command, body))
+```
+
+전체 코드는 [examples/03_interactive_server.py](examples/03_interactive_server.py) 를 보세요
+(`pip install "mattermost-bolt[fastapi]"`). WSGI 는 `wsgi_app(app)` 한 줄로 됩니다.
 
 ---
 

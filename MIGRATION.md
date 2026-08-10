@@ -79,7 +79,7 @@ when = datetime.fromtimestamp(created_ms / 1000)
 **해결 B** — 코드를 못 고치면 epoch 모드로 전환하세요.
 
 ```python
-app = App(..., ts_format="epoch")   # ts 가 "1786160418.395000" 형태가 된다
+app = App(..., ts_format="epoch")  # ts 가 "1786160418.395000" 형태가 된다
 ```
 
 epoch 모드는 `ts` ↔ post id 매핑을 메모리에 유지합니다(기본 1만 건 LRU).
@@ -99,7 +99,8 @@ Slack 은 Socket Mode 하나로 전부 받지만 Mattermost 는 방향이 다릅
 
 ```python
 app = App(
-    token=..., server_url=...,
+    token=...,
+    server_url=...,
     mode="http",
     request_url="http://앱이_실제로_도달되는_주소:8099",
 )
@@ -190,8 +191,8 @@ Slack mrkdwn 과 Mattermost 마크다운은 **굵게** 문법이 다릅니다.
 **하드코딩된 Slack ID 는 전부 교체해야 합니다.** 편의를 위해 이름도 받습니다.
 
 ```python
-client.chat_postMessage(channel="#general", text="hi")   # 이름으로 조회 후 캐시
-client.chat_postMessage(channel="general", text="hi")     # 동일
+client.chat_postMessage(channel="#general", text="hi")  # 이름으로 조회 후 캐시
+client.chat_postMessage(channel="general", text="hi")  # 동일
 ```
 
 이름 해석에는 팀이 필요합니다. `App(team="myteam")` 을 지정하세요.
@@ -218,8 +219,7 @@ client.chat_postMessage(channel="general", text="hi")     # 동일
 ```python
 # 이전: @app.event("app_mention")
 @app.message(re.compile(r"@boltbot\b"))
-def on_mention(message, say):
-    ...
+def on_mention(message, say): ...
 ```
 
 봇은 **자신이 속한 채널의 메시지만** 받습니다(Slack 의 이벤트 구독 범위와 유사).
@@ -242,9 +242,9 @@ Mattermost 인스턴스 하나 + 봇 토큰 하나 구조를 전제로 합니다
 봇끼리의 대화를 처리해야 한다면 명시적으로 여세요.
 
 ```python
-@app.event("message")            # message() 대신 event() 를 쓰면 필터가 없다
-def all_messages(event):
-    ...
+@app.event("message")  # message() 대신 event() 를 쓰면 필터가 없다
+def all_messages(event): ...
+
 
 app = App(..., ignore_self=False)  # 자기 메시지까지 받으려면
 ```

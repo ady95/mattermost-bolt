@@ -521,8 +521,16 @@ class App:
         *,
         host: str = "0.0.0.0",
         blocking: bool = True,
+        http_receiver: bool = True,
     ) -> None:
-        """WebSocket 리스너와(필요 시) HTTP 리시버를 기동한다."""
+        """WebSocket 리스너와(필요 시) HTTP 리시버를 기동한다.
+
+        Args:
+            http_receiver: 내장 HTTP 리시버를 띄울지 여부. FastAPI/Flask 등
+                외부 웹 프레임워크에 얹을 때는 ``False`` 로 두고
+                ``handle_command`` / ``handle_action`` / ``handle_dialog`` 를
+                직접 호출한다. 모드 판정과 콜백 URL 생성은 그대로 유지된다.
+        """
         from .adapter.http_receiver import HTTPReceiver
         from .adapter.ws_client import MattermostWebSocketClient
 
@@ -539,14 +547,21 @@ class App:
         )
 
         if mode == MODE_HTTP:
-            self._http_server = HTTPReceiver(self, host=host, port=port)
-            self._http_server.start()
-            self.logger.info(
-                "HTTP 리시버: http://%s:%d%s/{commands,actions,dialogs}",
-                host,
-                port,
-                self.path_prefix,
-            )
+            if http_receiver:
+                self._http_server = HTTPReceiver(self, host=host, port=port)
+                self._http_server.start()
+                self.logger.info(
+                    "HTTP 리시버: http://%s:%d%s/{commands,actions,dialogs}",
+                    host,
+                    port,
+                    self.path_prefix,
+                )
+            else:
+                self.logger.info(
+                    "내장 HTTP 리시버를 끕니다. 외부 프레임워크가 %s/{commands,actions,dialogs} "
+                    "를 받아 App.handle_* 로 넘겨야 합니다.",
+                    self.path_prefix,
+                )
             if not self.request_url:
                 self.logger.warning(
                     "request_url 이 없어 버튼·다이얼로그의 콜백 URL 을 만들 수 없습니다. "

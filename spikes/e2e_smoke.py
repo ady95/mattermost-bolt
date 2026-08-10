@@ -23,9 +23,9 @@ for stream in (sys.stdout, sys.stderr):
     if hasattr(stream, "reconfigure"):
         stream.reconfigure(encoding="utf-8", errors="replace")
 
-import httpx  # noqa: E402
+import httpx
 
-from mattermost_bolt import App  # noqa: E402
+from mattermost_bolt import App
 
 results: list[tuple[str, bool, str]] = []
 
@@ -114,7 +114,7 @@ def main() -> int:
         received.set()
 
     app.start(blocking=False)
-    connected = app._ws.connected.wait(20)  # noqa: SLF001
+    connected = app._ws.connected.wait(20)
     check("WebSocket 인증", connected)
 
     if connected:
@@ -129,9 +129,9 @@ def main() -> int:
     print("\n[3] 재연결")
     if connected:
         # 연결을 강제로 끊고 자동 복구되는지 본다 (실행계획서 G6).
-        app._ws._connection.close()  # noqa: SLF001
-        app._ws.connected.clear()  # noqa: SLF001
-        check("끊김 후 자동 재연결", app._ws.connected.wait(25))  # noqa: SLF001
+        app._ws._connection.close()
+        app._ws.connected.clear()
+        check("끊김 후 자동 재연결", app._ws.connected.wait(25))
 
     app.stop()
     time.sleep(0.5)
