@@ -185,7 +185,7 @@ def test_wsgi_app_routes_commands(http_app: App) -> None:
     assert json.loads(body)["text"] == "pong"
 
 
-# -- 외부 프레임워크에 얹기 (FastAPI 등) -----------------------------------
+# -- 외부 웹 서버에 얹기 -----------------------------------------------------
 
 
 class _DummyWS:
@@ -218,7 +218,7 @@ def _http_app(fake_client: FakeClient) -> App:
 def test_start_can_skip_the_builtin_http_receiver(
     fake_client: FakeClient, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """FastAPI 등 외부 서버에 얹을 때 내장 리시버가 포트를 잡으면 안 된다."""
+    """외부 웹 서버에 얹을 때 내장 리시버가 포트를 잡으면 안 된다."""
     _patch_ws(monkeypatch)
     app = _http_app(fake_client)
     app.start(blocking=False, http_receiver=False)

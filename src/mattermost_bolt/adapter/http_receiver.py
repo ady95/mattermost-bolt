@@ -28,7 +28,7 @@ JSON_CONTENT = "application/json"
 def parse_body(content_type: str, raw: bytes) -> dict[str, Any]:
     """Mattermost 는 command 를 폼으로, 인터랙션을 JSON 으로 보낸다.
 
-    FastAPI 등 외부 프레임워크에 얹을 때도 그대로 쓸 수 있도록 공개한다.
+    외부 웹 서버에 직접 얹을 때도 같은 규칙으로 파싱할 수 있도록 공개한다.
     ``route()`` 와 짝을 이룬다.
     """
     text = raw.decode("utf-8") if raw else ""

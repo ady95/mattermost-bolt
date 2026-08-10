@@ -113,23 +113,17 @@ app.start(port=8099)
 
 자세한 진단은 [MIGRATION.md](MIGRATION.md) 를 참고하세요.
 
-### 4. 기존 웹 프레임워크에 얹기 (선택)
+### 4. 기존 WSGI 서버에 얹기 (선택)
 
-내장 HTTP 서버 대신 이미 운영 중인 FastAPI/Flask 앱이 인터랙션을 받게 할 수 있습니다.
+내장 HTTP 서버 대신 이미 운영 중인 WSGI 앱(Flask/gunicorn 등)이 인터랙션을 받게 할 수 있습니다.
 포트를 하나만 열거나, 기존 인증 미들웨어·리버스 프록시를 그대로 쓰고 싶을 때 유용합니다.
 
 ```python
-app.start(blocking=False, http_receiver=False)   # WebSocket 만 기동
+from mattermost_bolt.adapter.http_receiver import wsgi_app
 
-
-@api.post("/mmbolt/commands")  # FastAPI 라우트
-async def commands(request: Request):
-    body = parse_body(request.headers.get("content-type", ""), await request.body())
-    return _to_response(await run_in_threadpool(app.handle_command, body))
+application = wsgi_app(app)  # /mmbolt/* 를 처리한다
+app.start(blocking=False, http_receiver=False)  # 내장 리시버 없이 WebSocket 만 기동
 ```
-
-전체 코드는 [examples/03_interactive_server.py](examples/03_interactive_server.py) 를 보세요
-(`pip install "mattermost-bolt[fastapi]"`). WSGI 는 `wsgi_app(app)` 한 줄로 됩니다.
 
 ---
 

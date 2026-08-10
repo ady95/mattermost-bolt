@@ -526,10 +526,9 @@ class App:
         """WebSocket 리스너와(필요 시) HTTP 리시버를 기동한다.
 
         Args:
-            http_receiver: 내장 HTTP 리시버를 띄울지 여부. FastAPI/Flask 등
-                외부 웹 프레임워크에 얹을 때는 ``False`` 로 두고
-                ``handle_command`` / ``handle_action`` / ``handle_dialog`` 를
-                직접 호출한다. 모드 판정과 콜백 URL 생성은 그대로 유지된다.
+            http_receiver: 내장 HTTP 리시버를 띄울지 여부. ``wsgi_app()`` 등으로
+                외부 웹 서버에 얹을 때는 ``False`` 로 둔다(그러지 않으면 포트를
+                이중으로 잡는다). 모드 판정과 콜백 URL 생성은 그대로 유지된다.
         """
         from .adapter.http_receiver import HTTPReceiver
         from .adapter.ws_client import MattermostWebSocketClient
