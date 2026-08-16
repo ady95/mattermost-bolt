@@ -1,7 +1,21 @@
-# 예제코드 테스트 방법
+# 예제 안내와 테스트 방법
 
-`examples/` 의 예제 01~10 을 실제 Mattermost 서버에서 검증하는 절차입니다.
-공통 준비를 먼저 마친 뒤, 예제별 시나리오를 따라 하세요.
+mattermost-bolt 의 기능을 하나씩 보여주는 예제 01~10 과, 이를 실제
+Mattermost 서버에서 검증하는 절차입니다. 공통 준비를 먼저 마친 뒤,
+예제별 시나리오를 따라 하세요.
+
+| # | 파일 | 내용 |
+|---|---|---|
+| 01 | [01_hello_message.py](01_hello_message.py) | 메시지 리스닝 — Slack Bolt 와 동일한 핸들러 |
+| 02 | [02_slash_command.py](02_slash_command.py) | 슬래시 명령 (socket / http 두 모드) |
+| 03 | [03_interactive.py](03_interactive.py) | Block Kit 버튼과 모달(다이얼로그) |
+| 04 | [04_migrated_slack_app.py](04_migrated_slack_app.py) | 실제 Slack 앱을 무수정 마이그레이션한 모습 |
+| 05 | [05_reaction_workflow.py](05_reaction_workflow.py) | 리액션 트리거 — ✅ 승인 처리, 📌 DM 북마크 |
+| 06 | [06_thread_mention_bot.py](06_thread_mention_bot.py) | 멘션 감지(`app_mention` 대체)와 스레드 요약 |
+| 07 | [07_poll_bot.py](07_poll_bot.py) | 투표 봇 — 클릭마다 메시지를 다시 그리는 상태형 인터랙션 |
+| 08 | [08_report_upload.py](08_report_upload.py) | 채널 활동 집계 CSV 를 `files_upload_v2` 로 업로드 |
+| 09 | [09_onboarding_bot.py](09_onboarding_bot.py) | 채널 온보딩 — 환영 인사·DM 안내·새 채널 자동 합류 |
+| 10 | [10_middleware_compat.py](10_middleware_compat.py) | 미들웨어·에러 핸들러와 `compat.install` 무수정 실행 |
 
 ---
 
@@ -237,4 +251,4 @@ uv run python spikes/e2e_smoke.py
 | `MattermostApiError: 403` | 봇 권한 부족 | 봇을 팀·채널에 추가, 토큰 확인 |
 | WebSocket 재연결 반복 | 토큰 무효 | §1.3 의 `auth_test` 로 확인 |
 
-더 자세한 진단은 [MIGRATION.md](MIGRATION.md) §5 를 참고하세요.
+더 자세한 진단은 [MIGRATION.md](../MIGRATION.md) §5 를 참고하세요.

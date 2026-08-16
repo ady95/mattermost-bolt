@@ -35,5 +35,5 @@ spikes/payloads/
 *.swp
 .DS_Store
 
-# 서버 접속 정보 (git 추적 금지)
-우분투서버_SSH*.txt
+# 임시 문서
+_docs/
