@@ -42,6 +42,7 @@ class WebClient:
         team_id: str | None = None,
         ts_codec: TsCodec | None = None,
         action_url: str = "",
+        dialog_url: str = "",
         convert_mrkdwn: bool = True,
         timeout: float = DEFAULT_TIMEOUT,
         logger: logging.Logger | None = None,
@@ -55,6 +56,7 @@ class WebClient:
         self._team_id = team_id
         self.ts_codec = ts_codec or TsCodec()
         self.action_url = action_url
+        self.dialog_url = dialog_url
         self.convert_mrkdwn = convert_mrkdwn
         self.logger = logger or _logger
         self._owns_http = http_client is None
@@ -618,7 +620,7 @@ class WebClient:
         dialog_url: str | None = None,
         **_ignored: Any,
     ) -> MattermostResponse:
-        url = dialog_url or self.action_url
+        url = dialog_url or self.dialog_url
         if not url:
             raise UnsupportedFeatureError(
                 "views_open 은 다이얼로그 제출을 받을 HTTP 엔드포인트가 필요합니다. "
